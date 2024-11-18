@@ -1,20 +1,51 @@
 import { env, createExecutionContext, waitOnExecutionContext, SELF } from 'cloudflare:test';
 import { describe, it, expect } from 'vitest';
 import worker from '../src';
+import { DNSHelper } from '../src/dns.js';
+import { Bluesky } from '../src/bsky-api.js';
 
-describe('Hello World worker', () => {
-	it('responds with Hello World! (unit style)', async () => {
-		const request = new Request('http://example.com');
-		// Create an empty context to pass to `worker.fetch()`.
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, env, ctx);
-		// Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
-		await waitOnExecutionContext(ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
-	});
+describe('Bluesky handle registration worker', () => {
+    it('responds with 404 for other URLs', async () => {
+        const request = new Request('http://example.com/');
+        const ctx = createExecutionContext();
+        const response = await worker.fetch(request, env, ctx);
+        await waitOnExecutionContext(ctx);
+        expect(response.status).toBe(404);
+    });
 
-	it('responds with Hello World! (integration style)', async () => {
-		const response = await SELF.fetch(request, env, ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
-	});
+    it('responds with a DID for a user registered via the environment', async () => {
+        const request = new Request('http://example.com/.well-known/atproto-did');
+        const ctx = createExecutionContext();
+        const response = await worker.fetch(request, env, ctx);
+        await waitOnExecutionContext(ctx);
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe('did:plc:jwj6kf4xowjc5taykzoadxll');
+    });
+
+    it('correctly grabs the DID from a user', async () => {
+        const bsky = new Bluesky("example.com");
+        expect(await bsky.getDID("safety.bsky.app")).toBe("did:plc:eon2iu7v3x2ukgxkqaf7e5np");
+    });
+
+    it('correctly asserts whether domains have the same nameserver', async () => {
+        const dnsHelper = new DNSHelper();
+        expect(await dnsHelper.haveSameNameserver("desu.cx", "matrix.desu.cx")).toBe(true);
+        expect(await dnsHelper.haveSameNameserver("google.com", "cloudflare.com")).toBe(false);
+    });
+
+    it('correctly asserts whether a handle is available', async () => {
+        const bsky = new Bluesky("desu.cx");
+        expect(await bsky.isHandleAvailable("desu.cx")).toStrictEqual([false, 'Handle taken']);
+        expect(await bsky.isHandleAvailable("safety.bsky.app")).toStrictEqual([false, 'Invalid domain']);
+        expect(await bsky.isHandleAvailable("donottake.desu.cx")).toStrictEqual([true, 'Handle available']);
+    });
+
+    it('responds with a DID for a user registered normally', async () => {
+        const request = new Request('http://real.example.com/.well-known/atproto-did');
+        const ctx = createExecutionContext();
+        const response = await worker.fetch(request, env, ctx);
+        await waitOnExecutionContext(ctx);
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe('did:plc:jwj6kf4xowjc5taykzoadxll');
+    });
 });
