@@ -16,15 +16,11 @@ export class Bluesky {
     // Get DID by HTTP GET
     let textUrl = `https://${handle}/.well-known/atproto-did`;
     try {
+      let did;
       const textResponse = await fetch(textUrl);
-      const isWorker = (textResponse.headers.get("bluesky-worker") === version);
-      if (textResponse.status === 200) {
-        const did = await textResponse.text();
-        const isWorker = (textResponse.headers.get("bluesky-worker") === version);
-        console.log(isWorker)
-        return [did, isWorker];
-      }
-      return [null, isWorker];
+      const isWorker = textResponse.headers.get("bluesky-worker") === version;
+      if (textResponse.status === 200) did = await textResponse.text();
+      return [did, isWorker];
     } catch (err) {
       // Cloudflare Workers throw an exception if DNS resolution fails
       // This happens for safety.bsky.app, which is a valid domain.
@@ -42,7 +38,7 @@ export class Bluesky {
     const sameNS = await dns.haveSameNameserver(this.hostname, handle);
 
     // did[0] is the did if returned
-    // did[1] indicates whether the DID was returned by the worker 
+    // did[1] indicates whether the DID was returned by the worker
     if (sameNS && !did[0] && did[1]) return [true, "Handle available"];
     if (sameNS && did[0] && did[1]) return [false, "Handle taken"];
     if (!sameNS || !did[1]) return [false, "Invalid domain"];
