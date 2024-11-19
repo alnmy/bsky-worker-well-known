@@ -14,7 +14,7 @@ enabled = true
 [env.production]
 kv_namespaces = [{ binding = "STORE", id = "3409a1137dbf499d84197d8a78b6d961" }]
 [env.production.vars]
-identifiers = "desu.cx=did:plc:jwj6kf4xowjc5taykzoadxll"
+identifiers = "desu.cx=did:plc:jwj6kf4xowjc5taykzoadxll;admin.desu.cx=did:plc:z6gijqkstq3pmnpqoo23b7ix"
 
 [env.dev]
 kv_namespaces = [{ binding = "STORE", id = "0b3b9b6195f34f1b8b11e6bd5afafc01" }]

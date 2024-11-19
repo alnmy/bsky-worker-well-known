@@ -37,7 +37,7 @@ describe('Bluesky handle registration worker', () => {
         const bsky = new Bluesky("desu.cx");
         expect(await bsky.isHandleAvailable("desu.cx")).toStrictEqual([false, 'Handle taken']);             // Has worker routing 
         expect(await bsky.isHandleAvailable("safety.bsky.app")).toStrictEqual([false, 'Invalid domain']);   // Not owned by us
-        expect(await bsky.isHandleAvailable("noworker.desu.cx")).toStrictEqual([false, 'Invalid domain']);  // No worker routing
+        expect(await bsky.isHandleAvailable("donottake.desu.cx")).toStrictEqual([true, 'Handle available']);// Worker routing
     });
 
     it('responds with a DID for a user registered normally', async () => {

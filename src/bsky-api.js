@@ -7,28 +7,29 @@ export class Bluesky {
     this.hostname = hostname;
   }
 
-  async getDID(domain) {
+  async getDID(handle) {
     // Get DID by DNS TXT record
     const dns = new DNSHelper();
-    const txt = await dns.getDID(domain);
+    const txt = await dns.getDID(handle);
     if (txt) return [txt, false];
 
     // Get DID by HTTP GET
-    let textUrl = `https://${domain}/.well-known/atproto-did`;
+    let textUrl = `https://${handle}/.well-known/atproto-did`;
     try {
       const textResponse = await fetch(textUrl);
+      const isWorker = (textResponse.headers.get("bluesky-worker") === version);
       if (textResponse.status === 200) {
         const did = await textResponse.text();
-        const isWorker = (JSON.stringify(textResponse.headers)["Bluesky-Worker"] === version);
-        console.log([did, isWorker]);
+        const isWorker = (textResponse.headers.get("bluesky-worker") === version);
+        console.log(isWorker)
         return [did, isWorker];
       }
+      return [null, isWorker];
     } catch (err) {
       // Cloudflare Workers throw an exception if DNS resolution fails
       // This happens for safety.bsky.app, which is a valid domain.
       return [null, false];
     }
-    return [null, false];
   }
 
   async isHandleAvailable(handle) {
@@ -42,8 +43,8 @@ export class Bluesky {
 
     // did[0] is the did if returned
     // did[1] indicates whether the DID was returned by the worker 
-    if (sameNS && did[1]) return [true, "Handle available"];
-    if (sameNS && did[0]) return [false, "Handle taken"];
+    if (sameNS && !did[0] && did[1]) return [true, "Handle available"];
+    if (sameNS && did[0] && did[1]) return [false, "Handle taken"];
     if (!sameNS || !did[1]) return [false, "Invalid domain"];
   }
 }
