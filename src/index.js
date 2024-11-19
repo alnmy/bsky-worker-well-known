@@ -53,7 +53,7 @@ export default {
         // Check if the handle is valid
         const bsky = new Bluesky(url.hostname);
         const did = await bsky.getDID(data.handle);
-        if (!did) {
+        if (!did[0]) {
           return new Response("Invalid handle", {
             status: 400,
             headers: responseHeaders,
