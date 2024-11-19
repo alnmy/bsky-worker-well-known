@@ -2,9 +2,25 @@ import { DNSHelper } from "./dns.js";
 import { version } from "../package.json";
 
 export class Bluesky {
-  constructor(hostname) {
-    this.endpoint = "https://public.api.bsky.app";
+  constructor(hostname, accessJwt, refreshJwt) {
+    this.publicEndpoint = "https://public.api.bsky.app";
+    this.pdsEndpoint = "https://bsky.social";
+    this.chatEndpoint = "https://api.bsky.chat";
     this.hostname = hostname;
+
+    // Refresh the access token 
+    fetch("https://bsky.social/xrpc/com.atproto.server.refreshSession", {
+      method: "POST",
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${this.refreshJwt}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      this.accessJwt = data.accessJwt;
+      this.refreshJwt = data.refreshJwt;
+    });
   }
 
   async getDID(handle) {
@@ -42,5 +58,9 @@ export class Bluesky {
     if (sameNS && !did[0] && did[1]) return [true, "Handle available"];
     if (sameNS && did[0] && did[1]) return [false, "Handle taken"];
     if (!sameNS || !did[1]) return [false, "Invalid domain"];
-  }
+  };
+
+  async getMessagesFrom(did) {
+
+  };
 }

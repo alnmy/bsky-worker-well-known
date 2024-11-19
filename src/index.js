@@ -11,7 +11,6 @@ export default {
       "Access-Control-Allow-Methods": "GET, POST",
       "Bluesky-Worker": version,
     });
-    const debug = env.DEBUG;
     if (url.pathname === "/.well-known/atproto-did") {
       const identifiers = {};
 
@@ -51,7 +50,7 @@ export default {
         }
 
         // Check if the handle is valid
-        const bsky = new Bluesky(url.hostname);
+        const bsky = new Bluesky(url.hostname, env.LOGIN);
         const did = await bsky.getDID(data.handle);
         if (!did[0]) {
           return new Response("Invalid handle", {
