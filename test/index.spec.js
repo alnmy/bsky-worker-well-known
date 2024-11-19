@@ -24,7 +24,7 @@ describe('Bluesky handle registration worker', () => {
 
     it('correctly grabs the DID from a user', async () => {
         const bsky = new Bluesky("example.com");
-        expect(await bsky.getDID("safety.bsky.app")).toBe("did:plc:eon2iu7v3x2ukgxkqaf7e5np");
+        expect(await bsky.getDID("safety.bsky.app")).toStrictEqual(["did:plc:eon2iu7v3x2ukgxkqaf7e5np", false]);
     });
 
     it('correctly asserts whether domains have the same nameserver', async () => {
@@ -35,9 +35,9 @@ describe('Bluesky handle registration worker', () => {
 
     it('correctly asserts whether a handle is available', async () => {
         const bsky = new Bluesky("desu.cx");
-        expect(await bsky.isHandleAvailable("desu.cx")).toStrictEqual([false, 'Handle taken']);
-        expect(await bsky.isHandleAvailable("safety.bsky.app")).toStrictEqual([false, 'Invalid domain']);
-        expect(await bsky.isHandleAvailable("donottake.desu.cx")).toStrictEqual([true, 'Handle available']);
+        expect(await bsky.isHandleAvailable("desu.cx")).toStrictEqual([false, 'Handle taken']);             // Has worker routing 
+        expect(await bsky.isHandleAvailable("safety.bsky.app")).toStrictEqual([false, 'Invalid domain']);   // Not owned by us
+        expect(await bsky.isHandleAvailable("noworker.desu.cx")).toStrictEqual([false, 'Invalid domain']);  // No worker routing
     });
 
     it('responds with a DID for a user registered normally', async () => {

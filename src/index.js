@@ -1,5 +1,6 @@
 import { Bluesky } from "./bsky-api.js";
 import { DNSHelper } from "./dns.js";
+import { version } from "../package.json";
 
 export default {
   async fetch(request, env, ctx) {
@@ -8,7 +9,7 @@ export default {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST",
-      Server: "bsky-worker-well-known",
+      "Bluesky-Worker": version,
     });
     const debug = env.DEBUG;
     if (url.pathname === "/.well-known/atproto-did") {
@@ -49,7 +50,7 @@ export default {
           }
         }
 
-        // Check if the handle is valid by requesting both its TXT record and /.well-known/atproto-did record
+        // Check if the handle is valid
         const bsky = new Bluesky(url.hostname);
         const did = await bsky.getDID(data.handle);
         if (!did) {
@@ -60,9 +61,9 @@ export default {
         }
 
         // Check if the requested domain already has a Bluesky DID registered to it
-        let status = await bsky.isHandleAvailable;
-        if (await bsky.getDID(data.domain)) {
-          return new Response("Domain already registered", {
+        let status = await bsky.isHandleAvailable(data.domain);
+        if (!status[0]) {
+          return new Response(status[1], {
             status: 400,
             headers: responseHeaders,
           });
